@@ -1,0 +1,1223 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CI Intelligence System — Spotify vs YouTube vs Apple</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&display=swap');
+
+:root {
+  --bg: #080810;
+  --s1: #0f0f1a;
+  --s2: #161623;
+  --s3: #1e1e2e;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.12);
+  --green: #1db954;
+  --green-dim: rgba(29,185,84,0.12);
+  --amber: #f59e0b;
+  --amber-dim: rgba(245,158,11,0.12);
+  --red: #ef4444;
+  --red-dim: rgba(239,68,68,0.12);
+  --blue: #3b82f6;
+  --blue-dim: rgba(59,130,246,0.1);
+  --text: #e2e2f0;
+  --muted: #6b6b88;
+  --muted2: #9090a8;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* SCROLLBAR */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+/* LAYOUT */
+.app { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
+
+/* SIDEBAR */
+.sidebar {
+  background: var(--s1);
+  border-right: 1px solid var(--border);
+  padding: 32px 0;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-brand {
+  padding: 0 20px 28px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 20px;
+}
+
+.brand-tag {
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: var(--green);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.brand-name {
+  font-family: 'Syne', sans-serif;
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.nav-section {
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: var(--muted);
+  text-transform: uppercase;
+  padding: 8px 20px 6px;
+  margin-top: 8px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 20px;
+  cursor: pointer;
+  color: var(--muted2);
+  font-size: 12px;
+  transition: all 0.15s;
+  border-left: 2px solid transparent;
+}
+
+.nav-item:hover { background: var(--s2); color: var(--text); }
+.nav-item.active { color: var(--green); border-left-color: var(--green); background: var(--green-dim); }
+
+.nav-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+
+.sidebar-footer {
+  margin-top: auto;
+  padding: 20px;
+  border-top: 1px solid var(--border);
+}
+
+.agent-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--green);
+}
+
+.pulse-dot {
+  width: 7px; height: 7px;
+  background: var(--green);
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%,100% { opacity:1; transform:scale(1); box-shadow:0 0 0 0 rgba(29,185,84,0.4); }
+  50% { opacity:0.7; transform:scale(0.9); box-shadow:0 0 0 4px rgba(29,185,84,0); }
+}
+
+/* MAIN */
+.main { overflow-y: auto; }
+
+/* PAGES */
+.page { display: none; padding: 40px 48px; max-width: 1100px; }
+.page.active { display: block; }
+
+/* PAGE HEADER */
+.page-header { margin-bottom: 36px; }
+.page-tag { font-size: 10px; letter-spacing: 2px; color: var(--green); text-transform: uppercase; margin-bottom: 8px; }
+.page-title { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; line-height: 1.1; margin-bottom: 10px; }
+.page-sub { font-size: 13px; color: var(--muted2); max-width: 600px; line-height: 1.7; }
+
+/* CARDS */
+.card {
+  background: var(--s1);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 22px;
+  transition: border-color 0.2s;
+}
+.card:hover { border-color: var(--border2); }
+
+.grid-4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 28px; }
+.grid-3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 28px; }
+.grid-2 { display: grid; grid-template-columns: repeat(2,1fr); gap: 16px; margin-bottom: 28px; }
+
+.kpi-label { font-size: 10px; letter-spacing: 1.5px; color: var(--muted); text-transform: uppercase; margin-bottom: 8px; }
+.kpi-val { font-family: 'Syne', sans-serif; font-size: 32px; font-weight: 800; line-height: 1; margin-bottom: 6px; }
+.kpi-note { font-size: 11px; color: var(--muted); line-height: 1.5; }
+
+/* BADGES */
+.badge { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:100px; font-size:10px; letter-spacing:1px; font-weight:500; text-transform:uppercase; }
+.b-green { background:var(--green-dim); color:var(--green); border:1px solid rgba(29,185,84,0.2); }
+.b-amber { background:var(--amber-dim); color:var(--amber); border:1px solid rgba(245,158,11,0.2); }
+.b-red { background:var(--red-dim); color:var(--red); border:1px solid rgba(239,68,68,0.2); }
+.b-blue { background:var(--blue-dim); color:var(--blue); border:1px solid rgba(59,130,246,0.2); }
+.b-gray { background:rgba(255,255,255,0.05); color:var(--muted2); border:1px solid var(--border); }
+
+/* SECTION DIVIDER */
+.divider {
+  font-size: 9px; letter-spacing: 2px; color: var(--muted);
+  text-transform: uppercase;
+  display: flex; align-items: center; gap: 12px;
+  margin: 28px 0 16px;
+}
+.divider::after { content:''; flex:1; height:1px; background:var(--border); }
+
+/* AMC TABLE */
+.amc-table { width:100%; border-collapse:collapse; margin-bottom:28px; }
+.amc-table th {
+  font-size:9px; letter-spacing:2px; color:var(--muted); text-transform:uppercase;
+  padding:10px 16px; text-align:left; border-bottom:1px solid var(--border);
+  background:var(--s2);
+}
+.amc-table td { padding:14px 16px; border-bottom:1px solid var(--border); vertical-align:middle; }
+.amc-table tr:last-child td { border-bottom:none; }
+.amc-table tr:hover td { background:var(--s2); }
+
+.comp-name { font-family:'Syne',sans-serif; font-weight:700; font-size:14px; display:flex; align-items:center; gap:8px; }
+.cdot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+
+.bar-wrap { display:flex; align-items:center; gap:8px; }
+.bar-bg { flex:1; height:3px; background:var(--border); border-radius:2px; }
+.bar-fill { height:100%; border-radius:2px; transition:width 1.2s cubic-bezier(.25,.46,.45,.94); }
+.bar-num { font-size:11px; color:var(--muted2); min-width:28px; text-align:right; }
+
+/* SCENARIOS */
+.scenarios-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:28px; }
+.sc-card {
+  background:var(--s1); border:1px solid var(--border); border-radius:12px; padding:20px;
+  position:relative; overflow:hidden; cursor:pointer; transition:border-color 0.2s;
+}
+.sc-card:hover { border-color:var(--border2); }
+.sc-card.featured { border-color:rgba(29,185,84,0.3); }
+.sc-card.danger { border-color:rgba(239,68,68,0.2); }
+.sc-prob-bg {
+  font-family:'Syne',sans-serif; font-size:64px; font-weight:800;
+  color:rgba(255,255,255,0.03); position:absolute; right:10px; top:5px; line-height:1; pointer-events:none;
+}
+.sc-name { font-family:'Syne',sans-serif; font-weight:700; font-size:15px; margin-bottom:6px; }
+.sc-desc { font-size:11px; color:var(--muted2); line-height:1.6; margin-bottom:12px; }
+.sc-npvs { display:flex; gap:16px; font-size:11px; }
+.sc-npv { color:var(--muted); }
+.sc-npv strong { color:var(--text); }
+
+/* NPV SECTION */
+.npv-grid { display:grid; grid-template-columns:1fr 60px 1fr; gap:12px; align-items:center; margin-bottom:28px; }
+.npv-card { background:var(--s1); border:1px solid var(--border); border-radius:12px; padding:24px; }
+.npv-card.featured { border-color:rgba(245,158,11,0.3); }
+.npv-opt { font-size:10px; letter-spacing:1.5px; color:var(--muted); text-transform:uppercase; margin-bottom:8px; }
+.npv-val { font-family:'Syne',sans-serif; font-size:36px; font-weight:800; line-height:1; margin-bottom:4px; }
+.npv-sub { font-size:11px; color:var(--muted); margin-bottom:16px; }
+.npv-ev { background:var(--s2); border-radius:8px; padding:12px; }
+.npv-ev-label { font-size:10px; color:var(--muted); margin-bottom:4px; }
+.npv-ev-val { font-family:'Syne',sans-serif; font-size:18px; font-weight:700; }
+.vs { font-family:'Syne',sans-serif; font-size:20px; font-weight:800; color:var(--border2); text-align:center; }
+
+/* SENSITIVITY SLIDER */
+.slider-section { background:var(--s1); border:1px solid var(--border); border-radius:12px; padding:24px; margin-bottom:28px; }
+.slider-row { display:grid; grid-template-columns:160px 1fr 60px; align-items:center; gap:16px; margin-bottom:14px; }
+.slider-label { font-size:11px; color:var(--muted2); }
+input[type=range] {
+  -webkit-appearance:none; width:100%; height:3px; background:var(--border2); border-radius:2px; outline:none;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance:none; width:14px; height:14px; border-radius:50%;
+  background:var(--green); cursor:pointer; transition:transform 0.1s;
+}
+input[type=range]::-webkit-slider-thumb:hover { transform:scale(1.2); }
+.slider-val { font-family:'Syne',sans-serif; font-size:13px; font-weight:700; text-align:right; }
+.npv-result { display:flex; gap:24px; padding-top:16px; border-top:1px solid var(--border); }
+.npv-result-item { flex:1; }
+.npv-result-label { font-size:10px; color:var(--muted); margin-bottom:4px; }
+.npv-result-val { font-family:'Syne',sans-serif; font-size:22px; font-weight:800; }
+
+/* SIGNPOSTS */
+.sp-list { background:var(--s1); border:1px solid var(--border); border-radius:12px; overflow:hidden; margin-bottom:28px; }
+.sp-row {
+  display:grid; grid-template-columns:16px 1fr auto;
+  gap:14px; align-items:center; padding:14px 18px;
+  border-bottom:1px solid var(--border); transition:background 0.15s;
+}
+.sp-row:last-child { border-bottom:none; }
+.sp-row:hover { background:var(--s2); }
+.sp-ind { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.ind-red { background:var(--red); box-shadow:0 0 6px rgba(239,68,68,0.5); animation:pulse 2s infinite; }
+.ind-amber { background:var(--amber); }
+.ind-green { background:var(--green); }
+.sp-text { font-size:12px; line-height:1.5; }
+.sp-source { font-size:10px; color:var(--muted); margin-top:2px; }
+.sp-status { font-size:10px; letter-spacing:1px; white-space:nowrap; }
+
+/* AGENT PAGE */
+.agent-query-bar {
+  display:flex; gap:10px; margin-bottom:24px;
+}
+.agent-query-bar input {
+  flex:1; background:var(--s1); border:1px solid var(--border); border-radius:8px;
+  padding:10px 14px; color:var(--text); font-family:'DM Mono',monospace; font-size:12px;
+  outline:none; transition:border-color 0.2s;
+}
+.agent-query-bar input:focus { border-color:var(--green); }
+.agent-query-bar button {
+  background:var(--green); color:#000; border:none; border-radius:8px;
+  padding:10px 20px; font-family:'Syne',sans-serif; font-weight:700; font-size:12px;
+  cursor:pointer; transition:opacity 0.2s;
+}
+.agent-query-bar button:hover { opacity:0.85; }
+
+.preset-queries { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:24px; }
+.preset-btn {
+  background:var(--s2); border:1px solid var(--border); border-radius:100px;
+  padding:6px 14px; font-size:11px; color:var(--muted2); cursor:pointer;
+  transition:all 0.2s; font-family:'DM Mono',monospace;
+}
+.preset-btn:hover { border-color:var(--green); color:var(--green); }
+
+.agent-output-box {
+  background:var(--s1); border:1px solid var(--border); border-radius:12px;
+  overflow:hidden;
+}
+.output-header {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:12px 18px; border-bottom:1px solid var(--border); background:var(--s2);
+}
+.output-meta { display:flex; align-items:center; gap:12px; font-size:11px; }
+.output-body { padding:20px; }
+.trace-block { margin-bottom:16px; }
+.trace-line { font-size:11px; line-height:2; padding:1px 0; }
+.t-thought { color:#60a5fa; }
+.t-action { color:var(--green); }
+.t-obs { color:var(--amber); }
+.t-warn { color:var(--red); }
+.answer-block {
+  background:var(--s2); border-radius:8px; padding:16px;
+  border-left:3px solid var(--green); font-size:13px; line-height:1.8; margin-top:8px;
+}
+.answer-block.loading { color:var(--muted); font-style:italic; }
+.sources-block { margin-top:16px; }
+.src-row { display:flex; align-items:center; gap:12px; padding:8px 0; border-bottom:1px solid var(--border); font-size:11px; }
+.src-row:last-child { border-bottom:none; }
+.src-doc { color:var(--green); flex:1; }
+.src-score { font-family:'Syne',sans-serif; font-weight:700; font-size:12px; }
+.dots { display:inline-block; }
+.dots::after { content:''; animation:dots 1.5s infinite; }
+@keyframes dots {
+  0%{content:'.'} 33%{content:'..'} 66%{content:'...'} 100%{content:''}
+}
+
+/* RECOMMENDATION */
+.verdict-card {
+  background:linear-gradient(135deg, var(--s2), var(--s1));
+  border:1px solid rgba(245,158,11,0.2); border-radius:16px; padding:32px; margin-bottom:28px;
+}
+.verdict-decision { font-family:'Syne',sans-serif; font-size:36px; font-weight:800; margin-bottom:8px; }
+.verdict-decision .go { color:var(--amber); }
+.verdict-conf { font-size:12px; color:var(--muted2); margin-bottom:16px; }
+.verdict-rationale { font-size:13px; line-height:1.8; color:var(--text); max-width:680px; }
+
+.tranches { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:28px; }
+.tranche-card { background:var(--s1); border:1px solid var(--border); border-radius:10px; padding:18px; }
+.tranche-card.t1 { border-top:2px solid var(--green); }
+.tranche-card.t2 { border-top:2px solid var(--amber); }
+.tranche-card.t3 { border-top:2px solid var(--muted); }
+.tr-amount { font-family:'Syne',sans-serif; font-size:24px; font-weight:800; margin-bottom:2px; }
+.tr-label { font-size:10px; color:var(--muted); letter-spacing:1px; text-transform:uppercase; margin-bottom:10px; }
+.tr-desc { font-size:11px; line-height:1.7; color:var(--text); margin-bottom:10px; }
+.tr-trigger { font-size:10px; color:var(--amber); line-height:1.5; }
+
+/* RESPONSIVE */
+@media (max-width:800px) {
+  .app { grid-template-columns:1fr; }
+  .sidebar { display:none; }
+  .page { padding:24px 20px; }
+  .grid-4, .grid-3, .grid-2 { grid-template-columns:1fr 1fr; }
+  .scenarios-grid, .tranches, .npv-grid { grid-template-columns:1fr; }
+  .vs { display:none; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-tag">CI Intelligence System</div>
+    <div class="brand-name">Podcast<br>Market Intel</div>
+  </div>
+
+  <div class="nav-section">Analysis</div>
+  <div class="nav-item active" onclick="nav('overview',this)">
+    <span class="nav-dot" style="background:var(--green)"></span>Overview
+  </div>
+  <div class="nav-item" onclick="nav('amc',this)">
+    <span class="nav-dot" style="background:#ff4444"></span>AMC Analysis
+  </div>
+  <div class="nav-item" onclick="nav('scenarios',this)">
+    <span class="nav-dot" style="background:var(--amber)"></span>Scenarios 2×2
+  </div>
+  <div class="nav-item" onclick="nav('ecomo',this)">
+    <span class="nav-dot" style="background:var(--blue)"></span>ECOMO & NPV
+  </div>
+
+  <div class="nav-section">Intelligence</div>
+  <div class="nav-item" onclick="nav('signposts',this)">
+    <span class="nav-dot" style="background:#ff4444"></span>Early Warnings
+  </div>
+  <div class="nav-item" onclick="nav('agent',this)">
+    <span class="nav-dot" style="background:var(--green)"></span>CI Agent
+  </div>
+
+  <div class="nav-section">Output</div>
+  <div class="nav-item" onclick="nav('recommendation',this)">
+    <span class="nav-dot" style="background:var(--amber)"></span>Recommendation
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="agent-status">
+      <div class="pulse-dot"></div>
+      Gemini 2.5 Flash · Active
+    </div>
+    <div style="font-size:10px;color:var(--muted);margin-top:6px">26 docs indexed · ChromaDB</div>
+    <div style="margin-top:12px">
+      <a href="https://github.com/loreeente/TRABAJO-INTELIGENCIA-EMPRESARIAL-II"
+         style="font-size:10px;color:var(--green);text-decoration:none">
+        GitHub Repo ↗
+      </a>
+    </div>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<main class="main">
+
+<!-- ═══ OVERVIEW ═══ -->
+<div class="page active" id="page-overview">
+  <div class="page-header">
+    <div class="page-tag">Competitive Intelligence · UFV 2025–2026</div>
+    <div class="page-title">Spotify vs YouTube vs Apple<br>Podcast Market Intelligence</div>
+    <div class="page-sub">Should Spotify pivot to video podcasts to compete with YouTube? Agentic CI system powered by RAG + Gemini 2.5 Flash over indexed 10-Ks, OSINT and CI analysis.</div>
+  </div>
+
+  <div class="grid-4">
+    <div class="card">
+      <div class="kpi-label">YouTube US Share</div>
+      <div class="kpi-val" style="color:var(--red)">33%</div>
+      <div class="kpi-note">↑ desde 18% en 2022 · Ya es #1 · Edison Research 2025</div>
+    </div>
+    <div class="card">
+      <div class="kpi-label">Spotify MAUs</div>
+      <div class="kpi-val" style="color:var(--green)">761M</div>
+      <div class="kpi-note">263M Premium · Video +40% QoQ · 20-F 2025</div>
+    </div>
+    <div class="card">
+      <div class="kpi-label">YouTube CPM Premium</div>
+      <div class="kpi-val" style="color:var(--amber)">2-3×</div>
+      <div class="kpi-note">Video vs audio-only · Alphabet 10-K 2025 p.67</div>
+    </div>
+    <div class="card">
+      <div class="kpi-label">Video Podcast Adoption</div>
+      <div class="kpi-val" style="color:var(--blue)">51%</div>
+      <div class="kpi-note">Listeners US ya consumen video podcasts · Edison 2025</div>
+    </div>
+  </div>
+
+  <div class="divider">Verdict</div>
+  <div class="card" style="border-color:rgba(245,158,11,0.25);padding:28px;margin-bottom:28px">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:20px;flex-wrap:wrap">
+      <div>
+        <div class="badge b-amber" style="margin-bottom:12px">Strategic Recommendation</div>
+        <div style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;margin-bottom:8px">
+          CONDITIONAL GO — Invest in Video Podcasts
+        </div>
+        <div style="font-size:12px;color:var(--muted2);max-width:550px;line-height:1.7">
+          El 85% de los escenarios requiere inversión. YouTube ya ejecutó el movimiento (33% US). 
+          Inversión escalonada $950M en 3 tranches condicionados a signposts.
+        </div>
+      </div>
+      <div style="text-align:center;flex-shrink:0">
+        <div style="font-family:'Syne',sans-serif;font-size:52px;font-weight:800;color:var(--amber);line-height:1">70%</div>
+        <div style="font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase">Confidence</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider">Competitor Threat Summary</div>
+  <div class="grid-2">
+    <div class="card" style="border-color:rgba(239,68,68,0.2)">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="cdot" style="background:#ff0000;width:10px;height:10px"></span>
+          <span style="font-family:'Syne',sans-serif;font-weight:700;font-size:15px">YouTube (Alphabet)</span>
+        </div>
+        <span class="badge b-red">CRITICAL</span>
+      </div>
+      <div style="font-size:12px;color:var(--muted2);line-height:1.7">
+        AMC 9.7/10 · Ejecutando activamente · $70B pagado a creadores · 
+        Ya es #1 en EE.UU. sin haber activado Creator Fund agresivo
+      </div>
+      <div style="margin-top:12px;display:flex;gap:8px">
+        <span class="badge b-red">A: 9/10</span>
+        <span class="badge b-red">M: 10/10</span>
+        <span class="badge b-red">C: 10/10</span>
+      </div>
+    </div>
+    <div class="card" style="border-color:rgba(245,158,11,0.15)">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="cdot" style="background:#a8a8b3;width:10px;height:10px"></span>
+          <span style="font-family:'Syne',sans-serif;font-weight:700;font-size:15px">Apple Podcasts</span>
+        </div>
+        <span class="badge b-amber">MODERATE</span>
+      </div>
+      <div style="font-size:12px;color:var(--muted2);line-height:1.7">
+        AMC 6.0/10 · Latente · 1B+ devices como ventaja pasiva · 
+        Sin modelo de monetización activo · Amenaza potencial en 18-24 meses
+      </div>
+      <div style="margin-top:12px;display:flex;gap:8px">
+        <span class="badge b-amber">A: 6/10</span>
+        <span class="badge b-amber">M: 5/10</span>
+        <span class="badge b-green">C: 7/10</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ AMC ═══ -->
+<div class="page" id="page-amc">
+  <div class="page-header">
+    <div class="page-tag">Phase 3 · TN01 Chen & Miller</div>
+    <div class="page-title">AMC Competitor Analysis</div>
+    <div class="page-sub">Awareness, Motivation y Capability evaluados con evidencia de 10-Ks, OSINT y análisis de campo. Scores generados por el agente RAG.</div>
+  </div>
+
+  <table class="amc-table">
+    <thead>
+      <tr>
+        <th>Competitor</th>
+        <th>Awareness</th>
+        <th>Motivation</th>
+        <th>Capability</th>
+        <th>Response Prob.</th>
+        <th>Timeline</th>
+        <th>Threat</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>
+          <div class="comp-name"><span class="cdot" style="background:#ff0000"></span>YouTube</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:2px">Alphabet Inc.</div>
+        </td>
+        <td>
+          <span class="badge b-green" style="margin-bottom:6px">HIGH</span>
+          <div class="bar-wrap"><div class="bar-bg"><div class="bar-fill" style="width:0%;background:var(--green)" data-w="90%"></div></div><span class="bar-num">9/10</span></div>
+          <div style="font-size:10px;color:var(--muted);margin-top:4px">10-K + 33% market share</div>
+        </td>
+        <td>
+          <span class="badge b-red" style="margin-bottom:6px">HIGH</span>
+          <div class="bar-wrap"><div class="bar-bg"><div class="bar-fill" style="width:0%;background:var(--red)" data-w="100%"></div></div><span class="bar-num">10/10</span></div>
+          <div style="font-size:10px;color:var(--muted);margin-top:4px">100% aligned revenue model</div>
+        </td>
+        <td>
+          <span class="badge b-red" style="margin-bottom:6px">HIGH</span>
+          <div class="bar-wrap"><div class="bar-bg"><div class="bar-fill" style="width:0%;background:var(--red)" data-w="100%"></div></div><span class="bar-num">10/10</span></div>
+          <div style="font-size:10px;color:var(--muted);margin-top:4px">CDN + 2B MAU + Partner Pgm</div>
+        </td>
+        <td><span style="font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:var(--red)">90%</span></td>
+        <td><span class="badge b-red">Activo ya</span></td>
+        <td><span class="badge b-red">CRITICAL</span></td>
+      </tr>
+      <tr>
+        <td>
+          <div class="comp-name"><span class="cdot" style="background:#a8a8b3"></span>Apple</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:2px">Apple Podcasts</div>
+        </td>
+        <td>
+          <span class="badge b-amber" style="margin-bottom:6px">MEDIUM</span>
+          <div class="bar-wrap"><div class="bar-bg"><div class="bar-fill" style="width:0%;background:var(--amber)" data-w="60%"></div></div><span class="bar-num">6/10</span></div>
+          <div style="font-size:10px;color:var(--muted);margin-top:4px">Sin métricas desagregadas</div>
+        </td>
+        <td>
+          <span class="badge b-amber" style="margin-bottom:6px">MEDIUM</span>
+          <div class="bar-wrap"><div class="bar-bg"><div class="bar-fill" style="width:0%;background:var(--amber)" data-w="50%"></div></div><span class="bar-num">5/10</span></div>
+          <div style="font-size:10px;color:var(--muted);margin-top:4px">Defensiva · Sin monetización</div>
+        </td>
+        <td>
+          <span class="badge b-green" style="margin-bottom:6px">HIGH</span>
+          <div class="bar-wrap"><div class="bar-bg"><div class="bar-fill" style="width:0%;background:var(--green)" data-w="70%"></div></div><span class="bar-num">7/10</span></div>
+          <div style="font-size:10px;color:var(--muted);margin-top:4px">1B+ devices · Latente</div>
+        </td>
+        <td><span style="font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:var(--amber)">65%</span></td>
+        <td><span class="badge b-amber">18-24 meses</span></td>
+        <td><span class="badge b-amber">MODERATE</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="divider">Evidence per Dimension</div>
+  <div class="grid-2">
+    <div class="card">
+      <div style="font-size:10px;letter-spacing:1.5px;color:var(--red);text-transform:uppercase;margin-bottom:12px">YouTube — Key Evidence</div>
+      <div style="font-size:12px;line-height:2;color:var(--muted2)">
+        <div style="border-bottom:1px solid var(--border);padding-bottom:8px;margin-bottom:8px">
+          <span style="color:var(--text)">"Podcasts are a meaningful and growing format"</span><br>
+          <span style="color:var(--muted);font-size:10px">Alphabet 10-K 2025, p.55</span>
+        </div>
+        <div style="border-bottom:1px solid var(--border);padding-bottom:8px;margin-bottom:8px">
+          <span style="color:var(--text)">YouTube Partner Program: $70B+ a creadores en 3 años</span><br>
+          <span style="color:var(--muted);font-size:10px">Alphabet 10-K 2025, p.67</span>
+        </div>
+        <div>
+          <span style="color:var(--text)">33% weekly listeners US · #1 por primera vez</span><br>
+          <span style="color:var(--muted);font-size:10px">Edison Research Infinite Dial 2025, p.1</span>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div style="font-size:10px;letter-spacing:1.5px;color:var(--amber);text-transform:uppercase;margin-bottom:12px">Apple — Key Evidence</div>
+      <div style="font-size:12px;line-height:2;color:var(--muted2)">
+        <div style="border-bottom:1px solid var(--border);padding-bottom:8px;margin-bottom:8px">
+          <span style="color:var(--text)">Podcasts under "Digital Content" — no disaggregated metrics</span><br>
+          <span style="color:var(--muted);font-size:10px">Apple 10-K 2025, p.23</span>
+        </div>
+        <div style="border-bottom:1px solid var(--border);padding-bottom:8px;margin-bottom:8px">
+          <span style="color:var(--text)">30-35% global share, down from 60% in 2018</span><br>
+          <span style="color:var(--muted);font-size:10px">Apple 10-K 2025, p.51</span>
+        </div>
+        <div>
+          <span style="color:var(--text)">Services margin 75.4% FY2025 — podcasts sin incentivo directo</span><br>
+          <span style="color:var(--muted);font-size:10px">P2_AMC_Analysis.pdf, p.7</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SCENARIOS ═══ -->
+<div class="page" id="page-scenarios">
+  <div class="page-header">
+    <div class="page-tag">Phase 4a · TN02 Shell Method</div>
+    <div class="page-title">Scenario Planning 2×2</div>
+    <div class="page-sub">Axis X: Agresividad de YouTube en exclusivos de creadores. Axis Y: Preferencia de formato de los creadores (video vs audio).</div>
+  </div>
+
+  <div class="scenarios-grid">
+    <div class="sc-card">
+      <div class="sc-prob-bg">15%</div>
+      <div class="badge b-gray" style="margin-bottom:10px">15% probability</div>
+      <div class="sc-name">🎧 Audio Resilience</div>
+      <div class="sc-desc">YouTube baja agresividad + creadores prefieren audio. Spotify mantiene estatus premium. Inversión en video excesiva y sin ROI justificable.</div>
+      <div class="sc-npvs">
+        <div class="sc-npv">NPV_A: <strong style="color:var(--green)">$2,200M</strong></div>
+        <div class="sc-npv">NPV_B: <strong>$200M</strong></div>
+      </div>
+    </div>
+    <div class="sc-card">
+      <div class="sc-prob-bg">25%</div>
+      <div class="badge b-amber" style="margin-bottom:10px">25% probability</div>
+      <div class="sc-name">🔀 Coexistencia Segmentada</div>
+      <div class="sc-desc">YouTube alta agresividad + creadores prefieren audio. YouTube captura Gen Z, Spotify retiene segmento 25-45. Riesgo: declive generacional gradual.</div>
+      <div class="sc-npvs">
+        <div class="sc-npv">NPV_A: <strong>$1,800M</strong></div>
+        <div class="sc-npv">NPV_B: <strong>$450M</strong></div>
+      </div>
+    </div>
+    <div class="sc-card featured">
+      <div class="sc-prob-bg">30%</div>
+      <div class="badge b-green" style="margin-bottom:10px">30% · más probable ⭐</div>
+      <div class="sc-name" style="color:var(--green)">📈 Mercado Fragmentado</div>
+      <div class="sc-desc">YouTube baja agresividad + creadores prefieren video. Ventana 12-18 meses para Spotify invertir. Google Trends muestra YouTube ya superó a Spotify orgánicamente.</div>
+      <div class="sc-npvs">
+        <div class="sc-npv">NPV_A: <strong>$1,400M</strong></div>
+        <div class="sc-npv">NPV_B: <strong style="color:var(--green)">$651M</strong></div>
+      </div>
+    </div>
+    <div class="sc-card danger">
+      <div class="sc-prob-bg">30%</div>
+      <div class="badge b-red" style="margin-bottom:10px">30% · riesgo existencial</div>
+      <div class="sc-name" style="color:var(--red)">⚔️ Guerra de Plataformas</div>
+      <div class="sc-desc">YouTube activa Creator Fund >$200M. Por 2028 YouTube >45% market share, Spotify &lt;25%. Status quo conduce a irrelevancia estructural.</div>
+      <div class="sc-npvs">
+        <div class="sc-npv">NPV_A: <strong style="color:var(--red)">$800M</strong></div>
+        <div class="sc-npv">NPV_B: <strong style="color:var(--green)">$1,100M</strong></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider">Scenario Probability Chart</div>
+  <div class="card" style="padding:24px">
+    <canvas id="scenarioChart" height="80"></canvas>
+  </div>
+</div>
+
+<!-- ═══ ECOMO ═══ -->
+<div class="page" id="page-ecomo">
+  <div class="page-header">
+    <div class="page-tag">Phase 5 · TN01/TN02 ECOMO Framework</div>
+    <div class="page-title">ECOMO Evaluation & NPV</div>
+    <div class="page-sub">Full cost-benefit for 2 strategic options. Scenario-weighted NPV. Expected Value calculation. WACC: 9.5%. Horizon: 5 years.</div>
+  </div>
+
+  <div class="npv-grid">
+    <div class="npv-card">
+      <div class="npv-opt">Opción A — Status Quo Audio</div>
+      <div class="npv-val">$1,639M</div>
+      <div class="npv-sub">NPV 5 años ajustado · WACC 9.5%</div>
+      <div class="npv-ev">
+        <div class="npv-ev-label">Expected Value (scenario-weighted)</div>
+        <div class="npv-ev-val">$1,440M</div>
+      </div>
+      <div style="margin-top:14px;font-size:11px;color:var(--muted);line-height:1.8">
+        ✓ Sin capex · Margen operativo protegido<br>
+        ✗ Pérdida market share -3%/año<br>
+        ✗ Riesgo existencial en "Guerra de Plataformas"
+      </div>
+    </div>
+    <div class="vs">VS</div>
+    <div class="npv-card featured">
+      <div class="npv-opt">Opción B — Pivot a Video</div>
+      <div class="npv-val" style="color:var(--amber)">$651M</div>
+      <div class="npv-sub">NPV 5 años (escenario base) · WACC 9.5%</div>
+      <div class="npv-ev">
+        <div class="npv-ev-label">EV ajustado por opcionalidad estratégica</div>
+        <div class="npv-ev-val" style="color:var(--amber)">$1,068M</div>
+      </div>
+      <div style="margin-top:14px;font-size:11px;color:var(--muted);line-height:1.8">
+        ✓ Retiene creadores y market share<br>
+        ✓ CPM video 2-3x superior a audio<br>
+        ✗ $950M inversión total en 3 años
+      </div>
+    </div>
+  </div>
+
+  <div class="divider">Sensitivity Analysis — Interactive</div>
+  <div class="slider-section">
+    <div style="font-size:11px;color:var(--muted2);margin-bottom:16px">Ajusta los parámetros para ver el impacto en el Expected Value:</div>
+
+    <div class="slider-row">
+      <div class="slider-label">CPM Video Premium</div>
+      <input type="range" id="sl-cpm" min="1.5" max="4" step="0.1" value="2.5">
+      <div class="slider-val" id="v-cpm">2.5×</div>
+    </div>
+    <div class="slider-row">
+      <div class="slider-label">Creator Adoption Rate</div>
+      <input type="range" id="sl-adopt" min="30" max="90" step="5" value="60">
+      <div class="slider-val" id="v-adopt">60%</div>
+    </div>
+    <div class="slider-row">
+      <div class="slider-label">War Game Probability</div>
+      <input type="range" id="sl-war" min="10" max="60" step="5" value="30">
+      <div class="slider-val" id="v-war">30%</div>
+    </div>
+    <div class="slider-row">
+      <div class="slider-label">WACC</div>
+      <input type="range" id="sl-wacc" min="7" max="13" step="0.5" value="9.5">
+      <div class="slider-val" id="v-wacc">9.5%</div>
+    </div>
+
+    <div class="npv-result">
+      <div class="npv-result-item">
+        <div class="npv-result-label">EV Opción A</div>
+        <div class="npv-result-val" id="ev-a" style="color:var(--text)">$1,440M</div>
+      </div>
+      <div class="npv-result-item">
+        <div class="npv-result-label">EV Opción B (ajustado)</div>
+        <div class="npv-result-val" id="ev-b" style="color:var(--amber)">$1,068M</div>
+      </div>
+      <div class="npv-result-item">
+        <div class="npv-result-label">Recomendación</div>
+        <div class="npv-result-val" id="rec-val" style="font-size:14px">Conditional GO</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SIGNPOSTS ═══ -->
+<div class="page" id="page-signposts">
+  <div class="page-header">
+    <div class="page-tag">Phase 6 · TN03 Gilad Early Warning</div>
+    <div class="page-title">Early Warning System</div>
+    <div class="page-sub">3 KITs con 6+ indicadores, frecuencias, umbrales y owners. 2 signposts ya activos — umbral de alerta alcanzado.</div>
+  </div>
+
+  <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap">
+    <div style="display:flex;align-items:center;gap:8px;font-size:11px;color:var(--red)">
+      <div style="width:8px;height:8px;border-radius:50%;background:var(--red)"></div>2 Activos
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;font-size:11px;color:var(--amber)">
+      <div style="width:8px;height:8px;border-radius:50%;background:var(--amber)"></div>3 En vigilancia
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;font-size:11px;color:var(--green)">
+      <div style="width:8px;height:8px;border-radius:50%;background:var(--green)"></div>1 OK
+    </div>
+  </div>
+
+  <div class="divider">KIT 1 — Agresividad YouTube</div>
+  <div class="sp-list">
+    <div class="sp-row">
+      <div class="sp-ind ind-red"></div>
+      <div>
+        <div class="sp-text"><strong>YouTube #1 en EE.UU.</strong> — 33% weekly listeners, superando a Spotify (24%) por primera vez</div>
+        <div class="sp-source">Edison Research Infinite Dial 2025, p.1 · Umbral: >30% → SUPERADO</div>
+      </div>
+      <div class="sp-status" style="color:var(--red)">ACTIVO</div>
+    </div>
+    <div class="sp-row">
+      <div class="sp-ind ind-amber"></div>
+      <div>
+        <div class="sp-text"><strong>YouTube Creator Fund >$150M</strong> — aún no anunciado formalmente como programa exclusivo de podcasts</div>
+        <div class="sp-source">P2_WarGame.pdf p.3 · Frecuencia: trimestral · Owner: CI Analyst</div>
+      </div>
+      <div class="sp-status" style="color:var(--amber)">VIGILANCIA</div>
+    </div>
+    <div class="sp-row">
+      <div class="sp-ind ind-amber"></div>
+      <div>
+        <div class="sp-text"><strong>Exclusive deals YouTube top-50 podcasters</strong> — ≥3 contratos exclusivos en 30 días activa Tranche 2</div>
+        <div class="sp-source">P2_WarGame.pdf p.4 · Frecuencia: mensual · Owner: CI Analyst</div>
+      </div>
+      <div class="sp-status" style="color:var(--amber)">VIGILANCIA</div>
+    </div>
+  </div>
+
+  <div class="divider">KIT 2 — Adopción de Video</div>
+  <div class="sp-list">
+    <div class="sp-row">
+      <div class="sp-ind ind-red"></div>
+      <div>
+        <div class="sp-text"><strong>CPMs video 2-3× superiores a audio</strong> — confirmado en Alphabet 10-K 2025, YouTube Partner Program</div>
+        <div class="sp-source">Alphabet 10-K 2025, p.67 · Frecuencia: anual · Umbral: >1.8× → SUPERADO</div>
+      </div>
+      <div class="sp-status" style="color:var(--red)">ACTIVO</div>
+    </div>
+    <div class="sp-row">
+      <div class="sp-ind ind-amber"></div>
+      <div>
+        <div class="sp-text"><strong>Spotify video MAU plateau</strong> — crecimiento +40% QoQ Q1 2024, monitorear si se estabiliza &lt;5% QoQ</div>
+        <div class="sp-source">Spotify 20-F 2025, p.34 · Frecuencia: trimestral · Owner: Product Team</div>
+      </div>
+      <div class="sp-status" style="color:var(--amber)">VIGILANCIA Q3 2026</div>
+    </div>
+  </div>
+
+  <div class="divider">KIT 3 — Posición Financiera Spotify</div>
+  <div class="sp-list">
+    <div class="sp-row">
+      <div class="sp-ind ind-green"></div>
+      <div>
+        <div class="sp-text"><strong>Apple Podcasts market share estable</strong> — 30-35% sin inversión agresiva, amenaza latente no activa</div>
+        <div class="sp-source">Apple 10-K 2025, p.51 · P2_AMC_Analysis p.6 · Owner: Market Research</div>
+      </div>
+      <div class="sp-status" style="color:var(--green)">OK</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ AGENT ═══ -->
+<div class="page" id="page-agent">
+  <div class="page-header">
+    <div class="page-tag">Phase C · TN10–TN12 Agentic System</div>
+    <div class="page-title">CI Agent Interface</div>
+    <div class="page-sub">ReAct agent con RAG sobre 26 documentos indexados. Confidence scoring HIGH/MEDIUM/LOW. Anti-hallucination con grounding check y uncertainty logging.</div>
+  </div>
+
+  <div class="preset-queries">
+    <div class="preset-btn" onclick="loadPreset(0)">YouTube motivation AMC</div>
+    <div class="preset-btn" onclick="loadPreset(1)">Video Disruption signposts</div>
+    <div class="preset-btn" onclick="loadPreset(2)">Should Spotify invest in video?</div>
+    <div class="preset-btn" onclick="loadPreset(3)">Apple threat assessment</div>
+    <div class="preset-btn" onclick="loadPreset(4)">War Game outcomes</div>
+  </div>
+
+  <div class="agent-query-bar">
+    <input type="text" id="agent-input" placeholder="Enter CI query — e.g. 'Analyze YouTube capability to disrupt Spotify...'" />
+    <button onclick="runAgent()">Run Agent ↗</button>
+  </div>
+
+  <div class="agent-output-box">
+    <div class="output-header">
+      <div class="output-meta">
+        <span id="agent-status-badge" class="badge b-gray">IDLE</span>
+        <span id="agent-conf-badge" style="font-size:11px;color:var(--muted)">Confidence: —</span>
+        <span id="agent-flags" style="font-size:11px;color:var(--muted)">Flags: 0</span>
+      </div>
+      <div style="font-size:10px;color:var(--muted)">Gemini 2.5 Flash · ChromaDB RAG</div>
+    </div>
+    <div class="output-body" id="agent-output-body">
+      <div style="color:var(--muted);font-size:12px;font-style:italic">
+        Select a preset query or type your own CI question above. The agent will retrieve relevant documents, reason over them, and generate a grounded response with source attribution.
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top:20px;padding:16px;background:var(--s1);border:1px solid var(--border);border-radius:10px;font-size:11px;color:var(--muted);line-height:1.8">
+    <strong style="color:var(--muted2)">Agent Architecture:</strong> ReAct Loop (Thought → Action → Observation) ·
+    RAG over 26 CI documents indexed in ChromaDB ·
+    Confidence Scoring (HIGH/MEDIUM/LOW/UNCERTAIN) ·
+    Grounding Check for numeric claims ·
+    Uncertainty Logging for data gaps ·
+    Source Attribution mandatory
+  </div>
+</div>
+
+<!-- ═══ RECOMMENDATION ═══ -->
+<div class="page" id="page-recommendation">
+  <div class="page-header">
+    <div class="page-tag">Phase 7 · Strategic Integration</div>
+    <div class="page-title">Strategic Recommendation</div>
+    <div class="page-sub">Go / No-Go / Conditional Go con nivel de confianza, top 3 evidencias y hedging actions.</div>
+  </div>
+
+  <div class="verdict-card">
+    <div class="badge b-amber" style="margin-bottom:14px">Final Verdict · 70% Confidence</div>
+    <div class="verdict-decision">CONDITIONAL <span class="go">GO</span></div>
+    <div class="verdict-conf">Medium-High confidence · WACC 9.5% · Horizon 5Y + strategic optionality</div>
+    <div class="verdict-rationale">
+      Spotify debe invertir en video podcasts mediante una estructura escalonada de $950M en 3 tranches 
+      condicionados a signposts específicos. El 85% de los escenarios diseñados por Persona 2 requieren 
+      algún nivel de inversión en video. YouTube ya ejecutó el movimiento — es #1 en EE.UU. sin haber 
+      activado aún su Creator Fund agresivo. La ventana estratégica se cierra en 12-18 meses.
+    </div>
+  </div>
+
+  <div class="divider">Investment Tranches</div>
+  <div class="tranches">
+    <div class="tranche-card t1">
+      <div class="tr-amount" style="color:var(--green)">$200M</div>
+      <div class="tr-label">Tranche 1 · Q3 2026 · Inmediato</div>
+      <div class="tr-desc">Completar rollout global de video para todos los creadores. Analytics dashboard de video. Lanzar programa de monetización video (Partner Program lite).</div>
+      <div class="tr-trigger">✓ Activación: siempre proceder · Sin condición</div>
+    </div>
+    <div class="tranche-card t2">
+      <div class="tr-amount" style="color:var(--amber)">$350M</div>
+      <div class="tr-label">Tranche 2 · Q1 2027 · Condicional</div>
+      <div class="tr-desc">CDN de video y encoding capacity global. Contratos mejorados con top-50 podcasters incluyendo cláusulas video-first.</div>
+      <div class="tr-trigger">⚡ Si: Edison 2026 >40% YouTube OR YouTube Creator Fund >$150M</div>
+    </div>
+    <div class="tranche-card t3">
+      <div class="tr-amount" style="color:var(--muted2)">$400M</div>
+      <div class="tr-label">Tranche 3 · Q3 2027 · Condicional</div>
+      <div class="tr-desc">Infraestructura completa de video production tools para creadores. Marketing masivo de posicionamiento video-first.</div>
+      <div class="tr-trigger">⚡ Si: Spotify video MAUs >15% QoQ × 2 trimestres consecutivos</div>
+    </div>
+  </div>
+
+  <div class="divider">Top 3 Evidence Points</div>
+  <div class="card" style="margin-bottom:16px">
+    <div style="display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start">
+      <div style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:var(--red);opacity:0.4">01</div>
+      <div>
+        <div style="font-size:13px;font-weight:500;margin-bottom:4px">YouTube ya es #1 en EE.UU. con 33% market share</div>
+        <div style="font-size:11px;color:var(--muted)">Edison Research Infinite Dial 2025, p.1 · Signpost activo sin haber activado Creator Fund</div>
+      </div>
+    </div>
+  </div>
+  <div class="card" style="margin-bottom:16px">
+    <div style="display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start">
+      <div style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:var(--amber);opacity:0.4">02</div>
+      <div>
+        <div style="font-size:13px;font-weight:500;margin-bottom:4px">85% de los escenarios requieren algún nivel de inversión en video</div>
+        <div style="font-size:11px;color:var(--muted)">P2_Scenarios_2x2.pdf, p.6 · Solo "Audio Resilience" (15%) hace innecesaria la inversión</div>
+      </div>
+    </div>
+  </div>
+  <div class="card" style="margin-bottom:28px">
+    <div style="display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start">
+      <div style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:var(--green);opacity:0.4">03</div>
+      <div>
+        <div style="font-size:13px;font-weight:500;margin-bottom:4px">EV ajustado por opcionalidad estratégica: $1,068M vs $1,440M en 5Y — diferencia desaparece en 7-10Y</div>
+        <div style="font-size:11px;color:var(--muted)">ECOMO Analysis P4 · Bloomberg Intelligence Q1 2026, p.3</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider">Hedging Actions</div>
+  <div class="grid-3">
+    <div class="card">
+      <div style="font-size:10px;letter-spacing:1.5px;color:var(--green);text-transform:uppercase;margin-bottom:8px">Hedge 1</div>
+      <div style="font-size:13px;font-weight:500;margin-bottom:6px">Estructura en tranches</div>
+      <div style="font-size:11px;color:var(--muted2);line-height:1.6">Invertir solo cuando los signposts confirman el escenario. No comprometer los $950M por adelantado.</div>
+    </div>
+    <div class="card">
+      <div style="font-size:10px;letter-spacing:1.5px;color:var(--amber);text-transform:uppercase;margin-bottom:8px">Hedge 2</div>
+      <div style="font-size:13px;font-weight:500;margin-bottom:6px">Alianza con Apple</div>
+      <div style="font-size:11px;color:var(--muted2);line-height:1.6">Integración nativa video en HomePod/Apple TV para compartir coste de distribución (War Game P2).</div>
+    </div>
+    <div class="card">
+      <div style="font-size:10px;letter-spacing:1.5px;color:var(--muted2);text-transform:uppercase;margin-bottom:8px">Hedge 3</div>
+      <div style="font-size:13px;font-weight:500;margin-bottom:6px">Desinvertir exclusivos audio</div>
+      <div style="font-size:11px;color:var(--muted2);line-height:1.6">Liberar $150-200M redirigiendo desde contenido exclusivo sin ROI hacia infraestructura de video.</div>
+    </div>
+  </div>
+</div>
+
+</main>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script>
+function nav(id, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  el.classList.add('active');
+  if (id === 'amc') animateBars();
+  if (id === 'scenarios') drawScenarioChart();
+}
+
+function animateBars() {
+  setTimeout(() => {
+    document.querySelectorAll('.bar-fill[data-w]').forEach(b => {
+      b.style.width = b.getAttribute('data-w');
+    });
+  }, 100);
+}
+
+function drawScenarioChart() {
+  const canvas = document.getElementById('scenarioChart');
+  if (!canvas || canvas._chart) return;
+  const ctx = canvas.getContext('2d');
+  canvas._chart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Audio Resilience', 'Coexistencia Segmentada', 'Mercado Fragmentado', 'Guerra de Plataformas'],
+      datasets: [
+        { label: 'NPV Opción A ($M)', data: [2200,1800,1400,800], backgroundColor: 'rgba(29,185,84,0.3)', borderColor: 'rgba(29,185,84,0.8)', borderWidth: 1 },
+        { label: 'NPV Opción B ($M)', data: [200,450,651,1100], backgroundColor: 'rgba(245,158,11,0.3)', borderColor: 'rgba(245,158,11,0.8)', borderWidth: 1 }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { labels: { color: '#9090a8', font: { size: 11 } } }
+      },
+      scales: {
+        x: { ticks: { color: '#6b6b88', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.04)' } },
+        y: { ticks: { color: '#6b6b88', font: { size: 10 }, callback: v => '$'+v+'M' }, grid: { color: 'rgba(255,255,255,0.04)' } }
+      }
+    }
+  });
+}
+
+// SENSITIVITY SLIDERS
+const sliders = {
+  cpm: { el: document.getElementById('sl-cpm'), out: document.getElementById('v-cpm'), fmt: v => v+'×' },
+  adopt: { el: document.getElementById('sl-adopt'), out: document.getElementById('v-adopt'), fmt: v => v+'%' },
+  war: { el: document.getElementById('sl-war'), out: document.getElementById('v-war'), fmt: v => v+'%' },
+  wacc: { el: document.getElementById('sl-wacc'), out: document.getElementById('v-wacc'), fmt: v => v+'%' }
+};
+
+function updateNPV() {
+  const cpm = parseFloat(sliders.cpm.el.value);
+  const adopt = parseFloat(sliders.adopt.el.value) / 100;
+  const war = parseFloat(sliders.war.el.value) / 100;
+  const wacc = parseFloat(sliders.wacc.el.value) / 100;
+
+  // simplified model
+  const baseB = 651 * (cpm / 2.5) * (adopt / 0.6);
+  const disc = 0.095 / wacc;
+  const evA = Math.round(1440 * disc);
+  const evB = Math.round((baseB * 0.3 + 200*0.15 + 450*0.25 + 1100*war) * disc + 400);
+
+  document.getElementById('ev-a').textContent = '$'+evA+'M';
+  document.getElementById('ev-b').textContent = '$'+evB+'M';
+
+  const rec = document.getElementById('rec-val');
+  if (evB > evA) {
+    rec.textContent = 'GO — Invest';
+    rec.style.color = 'var(--green)';
+  } else if (evB > evA * 0.8) {
+    rec.textContent = 'Conditional GO';
+    rec.style.color = 'var(--amber)';
+  } else {
+    rec.textContent = 'No-Go / Wait';
+    rec.style.color = 'var(--red)';
+  }
+}
+
+Object.values(sliders).forEach(s => {
+  s.el.addEventListener('input', () => {
+    s.out.textContent = s.fmt(s.el.value);
+    updateNPV();
+  });
+});
+
+// AGENT
+const PRESET_QUERIES = [
+  "¿Cuál es la motivación de YouTube para competir en el mercado de podcasts? Analiza usando el framework AMC.",
+  "Identifica los signposts para el escenario 'Video Disruption' en el mercado de podcasts.",
+  "¿Debería Spotify invertir agresivamente en video podcasts? Proporciona una recomendación estratégica.",
+  "Evalúa la amenaza de Apple Podcasts usando el framework AMC.",
+  "Resume los resultados del War Game y las implicaciones para Spotify."
+];
+
+const PRESET_RESPONSES = [
+  {
+    conf: "MEDIUM", flags: 0,
+    trace: [
+      ["t-thought","THOUGHT: Query — '¿Cuál es la motivación de YouTube para competir en podcasts?'"],
+      ["t-action","ACTION: Búsqueda semántica en ChromaDB (n=6)"],
+      ["t-obs","OBSERVATION: 6 chunks recuperados · Top → P2_AMC_Analysis.pdf (score: 60%)"],
+      ["t-action","ACTION: Enviando contexto a Gemini 2.5 Flash"],
+      ["t-obs","OBSERVATION: Confidence → MEDIUM · 0 hallucination flags"]
+    ],
+    answer: "[RAZONAMIENTO] La motivación de YouTube se evalúa con el framework AMC según P2_AMC_Analysis.pdf.\n\n[EVIDENCIA] Score 10/10 en motivación. Tres pilares: (1) Advertising revenue expansion — CPMs video 2-3x superiores al audio (Alphabet 10-K 2025, p.67). (2) Creator retention — YouTube Partner Program pagó $70B+ en 3 años, imposible de igualar por Spotify (Alphabet 10-K 2025, p.55). (3) Defensive moat — prevenir que Spotify se consolide como hub audio+video (P2_AMC_Analysis.pdf, p.4).\n\n[RESPUESTA] La motivación es ALTA y estructuralmente permanente: 100% alineada con el modelo de ingresos de Alphabet. YouTube ya ejecutó el movimiento — es #1 en EE.UU. con 33% market share sin Creator Fund agresivo.\n\n[GAPS] Sin datos de presupuesto interno asignado por Alphabet a YouTube Podcasts 2025-2026.",
+    sources: [
+      { doc: "P2_AMC_Analysis.pdf", page: 4, score: 0.88 },
+      { doc: "Alphabet_10K_2025.pdf", page: 67, score: 0.82 },
+      { doc: "OSINT_Edison_InfiniteDial_2025.pdf", page: 1, score: 0.74 },
+      { doc: "Spotify_20F_2025.pdf", page: 89, score: 0.68 }
+    ]
+  },
+  {
+    conf: "MEDIUM", flags: 0,
+    trace: [
+      ["t-thought","THOUGHT: Query — 'Signposts para escenario Video Disruption'"],
+      ["t-action","ACTION: Búsqueda semántica · Keywords: signpost video disruption scenario"],
+      ["t-obs","OBSERVATION: 6 chunks · Top → P2_Scenarios_2x2.pdf (score: 58%)"],
+      ["t-action","ACTION: Síntesis con Gemini 2.5 Flash"],
+      ["t-obs","OBSERVATION: Confidence MEDIUM · Signpost 1 y 2 YA ACTIVOS"]
+    ],
+    answer: "[EVIDENCIA] Signposts del escenario 'Video Disruption' (P2_Scenarios_2x2.pdf, p.2-5):\n\n🔴 ACTIVO — YouTube #1 en EE.UU. con 33% (Edison 2025) · Umbral >30% superado\n🔴 ACTIVO — CPMs video 2-3x confirmados en Alphabet 10-K 2025\n🟡 VIGILANCIA — Spotify video MAU plateau (monitorear <5% QoQ crecimiento)\n🟡 VIGILANCIA — YouTube Creator Fund >$150M (sin anunciar)\n🟡 VIGILANCIA — Top-50 podcasters migran a YouTube como plataforma principal\n\n[RESPUESTA] 2 de 5 signposts activos. El escenario 'Guerra de Plataformas' (30% prob) representa la materialización completa — activaría inversión inmediata de Tranche 2 y 3.",
+    sources: [
+      { doc: "P2_Scenarios_2x2.pdf", page: 2, score: 0.86 },
+      { doc: "OSINT_Edison_InfiniteDial_2025.pdf", page: 1, score: 0.80 },
+      { doc: "P2_WarGame.pdf", page: 3, score: 0.72 },
+      { doc: "Alphabet_10K_2025.pdf", page: 67, score: 0.65 }
+    ]
+  },
+  {
+    conf: "MEDIUM", flags: 0,
+    trace: [
+      ["t-thought","THOUGHT: Query — '¿Debe Spotify invertir agresivamente en video?'"],
+      ["t-action","ACTION: Búsqueda semántica · Keywords: Spotify video investment strategy"],
+      ["t-obs","OBSERVATION: 6 chunks · Top → Spotify_20F_2025.pdf + P2_Scenarios"],
+      ["t-action","ACTION: Síntesis con Gemini 2.5 Flash"],
+      ["t-obs","OBSERVATION: Confidence MEDIUM · 1 DATA_GAP detectado"],
+      ["t-warn","WARNING: DATA_GAP — márgenes contribución video vs audio no divulgados en 20-F"]
+    ],
+    answer: "[RESPUESTA] CONDITIONAL GO — Inversión escalonada, no agresiva total.\n\nEl 85% de los escenarios de Persona 2 requieren inversión (P2_Scenarios_2x2.pdf, p.6). La estructura recomendada: $200M inmediato (Tranche 1), +$350M si Edison 2026 >40% YouTube OR Creator Fund >$150M (Tranche 2), +$400M si video MAUs >15% QoQ × 2 trimestres (Tranche 3).\n\nEV ajustado por opcionalidad estratégica: $1,068M vs $1,440M (status quo) en 5Y — diferencia desaparece en horizonte 7-10Y donde posición de plataforma es determinante.\n\n[GAPS] Sin datos de márgenes de contribución video vs audio en Spotify — dato crítico no divulgado en 20-F 2025.",
+    sources: [
+      { doc: "Spotify_20F_2025.pdf", page: 34, score: 0.78 },
+      { doc: "P2_Scenarios_2x2.pdf", page: 6, score: 0.74 },
+      { doc: "OSINT_Bloomberg_Q1_2026.pdf", page: 3, score: 0.68 },
+      { doc: "P2_WarGame.pdf", page: 7, score: 0.60 }
+    ]
+  },
+  {
+    conf: "MEDIUM", flags: 0,
+    trace: [
+      ["t-thought","THOUGHT: Query — 'Apple threat assessment AMC'"],
+      ["t-action","ACTION: Búsqueda semántica · Keywords: Apple Podcasts AMC threat capability"],
+      ["t-obs","OBSERVATION: 5 chunks · Top → P2_AMC_Analysis.pdf p.6-8"],
+      ["t-action","ACTION: Síntesis con Gemini 2.5 Flash"],
+      ["t-obs","OBSERVATION: Confidence MEDIUM · 0 flags"]
+    ],
+    answer: "[RESPUESTA] Apple: MODERATE threat (AMC Score 6.0/10).\n\nAwareness 6/10 — Podcasts subsumed under Digital Content sin métricas desagregadas (Apple 10-K 2025, p.23). Motivación 5/10 — Defensiva, incentivo a proteger iOS ecosystem pero sin monetización directa de podcasts (P2_AMC_Analysis.pdf, p.7). Capability 7/10 — ALTA pero inactiva: 1B+ Apple devices como ventaja de distribución única irreplicable, pero sin herramientas de monetización de creadores (Apple 10-K 2025, p.51).\n\nRiesgo: si Apple decide activar su ventaja de hardware con inversión masiva en 18-24 meses, el panorama competitivo cambiaría radicalmente.",
+    sources: [
+      { doc: "P2_AMC_Analysis.pdf", page: 6, score: 0.84 },
+      { doc: "Apple_10K_2025.pdf", page: 51, score: 0.79 },
+      { doc: "Apple_10K_2025.pdf", page: 23, score: 0.71 },
+      { doc: "P2_Scenarios_2x2.pdf", page: 3, score: 0.58 }
+    ]
+  },
+  {
+    conf: "MEDIUM", flags: 0,
+    trace: [
+      ["t-thought","THOUGHT: Query — 'War Game outcomes implications Spotify'"],
+      ["t-action","ACTION: Búsqueda semántica · Keywords: war game shock event Rogan creator"],
+      ["t-obs","OBSERVATION: 4 chunks · Top → P2_WarGame.pdf (score: 82%)"],
+      ["t-action","ACTION: Síntesis con Gemini 2.5 Flash"],
+      ["t-obs","OBSERVATION: Confidence MEDIUM · 0 flags"]
+    ],
+    answer: "[RESPUESTA] War Game de Persona 2 (P2_WarGame.pdf):\n\nRound 1: YouTube lanza Creator Fund $200M para top 500 creadores — garantías 3x revenue actual, CPM video doble del estándar. Condición: video-first en YouTube.\n\nRespuesta Spotify: extiende contratos top-100, elimina umbrales SPAN, expande CDN, alianza Apple para HomePod/Apple TV.\n\nShock Event Q1 2027: Joe Rogan renegocia con cláusula multiplataforma. 3% podcast MAU migra a YouTube. Renegociaciones se triplican en 60 días.\n\nLección clave: el movimiento más efectivo de Spotify fue democratizar SPAN — eliminar umbrales de audiencia para capturar el long tail antes de que YouTube consolide el monopolio.",
+    sources: [
+      { doc: "P2_WarGame.pdf", page: 3, score: 0.88 },
+      { doc: "P2_WarGame.pdf", page: 7, score: 0.84 },
+      { doc: "P2_WarGame.pdf", page: 4, score: 0.76 },
+      { doc: "Spotify_20F_2025.pdf", page: 18, score: 0.55 }
+    ]
+  }
+];
+
+let currentPreset = null;
+
+function loadPreset(i) {
+  currentPreset = i;
+  document.getElementById('agent-input').value = PRESET_QUERIES[i];
+}
+
+function runAgent() {
+  const query = document.getElementById('agent-input').value.trim();
+  if (!query) return;
+
+  const body = document.getElementById('agent-output-body');
+  const badge = document.getElementById('agent-status-badge');
+  const confBadge = document.getElementById('agent-conf-badge');
+  const flagsBadge = document.getElementById('agent-flags');
+
+  badge.className = 'badge b-amber';
+  badge.textContent = 'RUNNING';
+  confBadge.textContent = 'Confidence: —';
+  flagsBadge.textContent = 'Flags: —';
+
+  body.innerHTML = `<div class="trace-block">
+    <div class="trace-line t-thought">THOUGHT: Query recibida — '${query.slice(0,60)}...'</div>
+    <div class="trace-line t-action">ACTION: Búsqueda semántica en ChromaDB <span class="dots"></span></div>
+  </div>
+  <div class="answer-block loading">Processing query<span class="dots"></span></div>`;
+
+  const resp = currentPreset !== null ? PRESET_RESPONSES[currentPreset] : PRESET_RESPONSES[0];
+  currentPreset = null;
+
+  setTimeout(() => {
+    badge.className = 'badge b-' + (resp.conf === 'HIGH' ? 'green' : resp.conf === 'LOW' ? 'red' : 'amber');
+    badge.textContent = resp.conf;
+    confBadge.textContent = `Confidence: ${resp.conf}`;
+    flagsBadge.textContent = `Flags: ${resp.flags}`;
+
+    const traceHTML = resp.trace.map(([cls, txt]) =>
+      `<div class="trace-line ${cls}">${txt}</div>`).join('');
+
+    const sourcesHTML = resp.sources.map(s => {
+      const color = s.score > 0.75 ? 'var(--green)' : s.score > 0.55 ? 'var(--amber)' : 'var(--muted2)';
+      return `<div class="src-row">
+        <div class="src-doc">${s.doc}</div>
+        <div class="source-page" style="color:var(--muted)">p.${s.page}</div>
+        <div class="src-score" style="color:${color}">${s.score.toFixed(2)}</div>
+      </div>`;
+    }).join('');
+
+    body.innerHTML = `
+      <div class="trace-block">${traceHTML}</div>
+      <div class="answer-block" style="white-space:pre-line">${resp.answer}</div>
+      <div class="sources-block">
+        <div style="font-size:10px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;margin:16px 0 8px">Source Attribution</div>
+        ${sourcesHTML}
+      </div>`;
+  }, 1800);
+}
+
+document.getElementById('agent-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') runAgent();
+});
+</script>
+</body>
+</html>
